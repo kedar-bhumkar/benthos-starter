@@ -1,0 +1,64 @@
+http:
+  enabled: true
+  address: 0.0.0.0:4195
+  root_path: /benthos
+  debug_endpoints: false
+  cert_file: ""
+  key_file: ""
+  cors:
+    enabled: false
+    allowed_origins: []
+  basic_auth:
+    enabled: false
+    realm: restricted
+    username: ""
+    password_hash: ""
+    algorithm: sha256
+    salt: ""
+input:
+  kafka:
+    addresses: [ localhost:9092 ]
+    topics: [ quickstart-events ]
+    consumer_group: test-consumer-group
+buffer:
+  none: {}
+pipeline:
+  threads: -1
+  processors:
+    - sleep:
+        duration: 500ms
+    - mapping: |
+        root.doc = this
+        root.first_name = this.names.index(0).uppercase()
+        root.last_name = this.names.index(-1).hash("sha256").encode("base64")
+output:
+  kafka:
+    addresses: [ localhost:9092 ]
+    topic: end-events    
+input_resources: []
+processor_resources: []
+output_resources: []
+cache_resources: []
+rate_limit_resources: []
+logger:
+  level: INFO
+  format: logfmt
+  add_timestamp: false
+  level_name: level
+  timestamp_name: time
+  message_name: msg
+  static_fields:
+    '@service': benthos
+  file:
+    path: ""
+    rotate: false
+    rotate_max_age_days: 0
+metrics:
+  prometheus: {}
+  mapping: ""
+tracer:
+  none: {}
+shutdown_delay: 0s
+shutdown_timeout: 20s
+tests: []
+
