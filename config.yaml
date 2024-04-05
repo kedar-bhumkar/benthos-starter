@@ -18,23 +18,40 @@ http:
 input:
   kafka:
     addresses: [ localhost:9092 ]
-    topics: [ quickstart-events ]
+    topics: [ ecdh-events ]
     consumer_group: test-consumer-group
 buffer:
   none: {}
-pipeline:
-  threads: -1
-  processors:
-    - sleep:
-        duration: 500ms
-    - mapping: |
-        root.doc = this
-        root.first_name = this.names.index(0).uppercase()
-        root.last_name = this.names.index(-1).hash("sha256").encode("base64")
+pipeline:  
+  processors: []
 output:
-  kafka:
-    addresses: [ localhost:9092 ]
-    topic: end-events    
+  switch:
+    cases:
+      - check: this.type == "labs"
+        output:
+          label: labs
+          kafka:
+            addresses: [ localhost:9092 ]
+            topic: lab-events   
+          processors:
+            - mapping: |
+                root = this
+                root.type = "LAB_RESULTS"
+      - check: this.type == "vaccines"
+        output:
+          label: vaccines
+          kafka:
+            addresses: [ localhost:9092 ]
+            topic: vaccine-events    
+          processors:
+            - mapping: |
+                root = this
+                root.type = "VACCINE_RESULTS"
+
+  
+
+
+  
 input_resources: []
 processor_resources: []
 output_resources: []
